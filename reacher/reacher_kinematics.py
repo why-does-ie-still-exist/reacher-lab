@@ -6,7 +6,7 @@ HIP_OFFSET = 0.0335
 L1 = 0.08 # length of link 1
 L2 = 0.11 # length of link 2
 
-def calculate_forward_kinematics_robot(joint_angles):
+def calculate_forward_kinematics_robot(joint_angles: np.ndarray):
     """Calculate xyz coordinates of end-effector given joint angles.
 
     Use forward kinematics equations to calculate the xyz coordinates of the end-effector
@@ -56,7 +56,7 @@ def calculate_forward_kinematics_robot(joint_angles):
 
     return D0toEinD
 
-def ik_cost(end_effector_pos, guess):
+def ik_cost(end_effector_pos: np.ndarray, guess: np.ndarray):
     """Calculates the inverse kinematics loss.
 
     Calculate the Euclidean distance between the desired end-effector position and
@@ -69,8 +69,8 @@ def ik_cost(end_effector_pos, guess):
       Euclidean distance between end_effector_pos and guess. Returns float.
     """
     # TODO for students: Implement this function. ~1-5 lines of code.
-    cost = 0.0
-    raise cost
+    difference = end_effector_pos - calculate_forward_kinematics_robot(guess)
+    return sqrt(difference.dot(difference))
 
 def calculate_jacobian(joint_angles):
     """Calculate the jacobian of the end-effector position wrt joint angles.
@@ -89,8 +89,18 @@ def calculate_jacobian(joint_angles):
     Returns:
       Jacobian matrix. Numpy 3x3 array.
     """
-    # TODO for students: Implement this function. ~5-10 lines of code.
-    jacobian = np.zeros(3, 3)
+
+    def fdm(angles, angleindex, cartindex):
+        delta = np.array(0,0,0)
+        delta[angleindex] = .0001
+        difference = calculate_forward_kinematics_robot(angles + delta) - calculate_forward_kinematics_robot(angles)
+        return (difference/delta)[cartindex]
+
+
+    jacobian = np.array([
+        np.array([fdm(joint_angles, angleindex, cartindex) for angleindex in range(3)])
+        for cartindex in range(3)
+    ])
     return jacobian
 
 def calculate_inverse_kinematics(end_effector_pos, guess):
@@ -109,5 +119,16 @@ def calculate_inverse_kinematics(end_effector_pos, guess):
       Joint angles that correspond to given desired end-effector position. Numpy array with 3 elements.
     """
     # TODO for students: Implement this function. ~10-20 lines of code.
-    joint_angles = np.array([0.0, 0.0, 0.0])
-    return joint_angles
+
+    cost = 10000000.0
+    epsilon = .04
+    learning_rate = .0001
+    while (cost > epsilon):
+        jacobian = calculate_jacobian(guess)
+        difference = calculate_forward_kinematics_robot(guess) - end_effector_pos
+        gradient = np.matmul(np.transpose(jacobian), difference)
+        guess = guess - learning_rate*gradient
+        cost = ik_cost(end_effector_pos, guess)
+        print(f"cost: {cost}")
+
+    return guess
