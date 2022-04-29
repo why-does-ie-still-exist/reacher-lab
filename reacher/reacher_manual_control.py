@@ -58,13 +58,18 @@ def main(argv):
     if run_on_robot:
       hardware_interface.read_incoming_data()
 
+    end_effector_pos = np.array([-.03,-.07, .15,])
+
     if time.time() - last_command > UPDATE_DT:
       last_command = time.time()
       counter += 1
       joint_angles = np.zeros(6)
+      desired_joint_pos = [*reacher_kinematics.calculate_inverse_kinematics(np.array([-.03,-.07, .15,]),np.zeros(3)),0.,0.,0.]
+      # print(desired_joint_pos)
       for i in range(len(param_ids)):
-        c = param_ids[i]
-        targetPos = p.readUserDebugParameter(c)
+        targetPos = desired_joint_pos[i]
+        if counter % 10 == 0:
+            print(repr(targetPos))
         joint_angles[i] = targetPos
         p.setJointMotorControl2(reacher,
                                 joint_ids[i],
@@ -81,15 +86,15 @@ def main(argv):
         # Actuator positions are stored in array: hardware_interface.robot_state.position,
         # Actuator velocities are stored in array: hardware_interface.robot_state.velocity
 
-      end_effector_pos = reacher_kinematics.calculate_forward_kinematics_robot(
-          joint_angles[:3])
+      # end_effector_pos = reacher_kinematics.calculate_forward_kinematics_robot(
+      #     joint_angles[:3])
       p.resetBasePositionAndOrientation(sphere_id,
                                         posObj=end_effector_pos,
                                         ornObj=[0, 0, 0, 1])
 
-      if counter % 5 == 0:
-        print(
-            reacher_kinematics.calculate_forward_kinematics_robot(joint_angles[:3]))
+      # if counter % 5 == 0:
+      #   print(
+      #       reacher_kinematics.calculate_forward_kinematics_robot(joint_angles[:3]))
 
 
 app.run(main)
