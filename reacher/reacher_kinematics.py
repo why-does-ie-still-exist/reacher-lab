@@ -1,6 +1,6 @@
-import math
 import numpy as np
 import copy
+from math import *
 
 HIP_OFFSET = 0.0335
 L1 = 0.08 # length of link 1
@@ -17,9 +17,44 @@ def calculate_forward_kinematics_robot(joint_angles):
     Returns:
       xyz coordinates of the end-effector in the arm frame. Numpy array of 3 elements.
     """
-    # TODO for students: Implement this function. ~25-35 lines of code.
-    end_effector_xyz = np.array([0.0, 0.0, 0.0])
-    return end_effector_xyz
+    upperrot = joint_angles[2]
+    lowerrot = joint_angles[1]
+    baserot = -joint_angles[0]
+
+    A0toEinA = np.array([0, 0, L2])
+
+    matrixFromAtoB = np.array([
+        [cos(upperrot), 0, -sin(upperrot)],
+        [0, 1, 0, ],
+        [sin(upperrot), 0, cos(upperrot)],
+    ])
+
+    B0toA0inB = np.array([0, 0, L1])
+
+    B0toEinB = B0toA0inB + np.matmul(matrixFromAtoB, A0toEinA)
+
+    matrixfromBtoC = np.array([
+        [cos(lowerrot), 0, -sin(lowerrot)],
+        [0, 1, 0, ],
+        [sin(lowerrot), 0, cos(lowerrot)],
+    ])
+
+    C0toB0inC = np.array([0,-HIP_OFFSET,0])
+
+    C0toEinC = C0toB0inC + np.matmul(matrixfromBtoC, B0toEinB)
+
+    matrixfromCtoD = np.array([
+        [cos(baserot), -sin(baserot), 0],
+        [sin(baserot), cos(baserot), 0],
+        [0, 0, 1],
+    ])
+
+    C0toEinD = np.matmul(matrixfromCtoD, C0toEinC)
+    D0toC0inD = [0, 0, 0]
+
+    D0toEinD = D0toC0inD + C0toEinD
+
+    return D0toEinD
 
 def ik_cost(end_effector_pos, guess):
     """Calculates the inverse kinematics loss.
