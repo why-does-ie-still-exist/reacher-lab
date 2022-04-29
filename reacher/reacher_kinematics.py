@@ -21,36 +21,36 @@ def calculate_forward_kinematics_robot(joint_angles: np.ndarray):
     lowerrot = joint_angles[1]
     baserot = -joint_angles[0]
 
-    A0toEinA = np.array([0, 0, L2])
+    A0toEinA = np.array([0., 0., L2])
 
     matrixFromAtoB = np.array([
-        [cos(upperrot), 0, -sin(upperrot)],
-        [0, 1, 0, ],
-        [sin(upperrot), 0, cos(upperrot)],
+        [cos(upperrot), 0., -sin(upperrot)],
+        [0., 1., 0.],
+        [sin(upperrot), 0., cos(upperrot)],
     ])
 
-    B0toA0inB = np.array([0, 0, L1])
+    B0toA0inB = np.array([0., 0., L1])
 
     B0toEinB = B0toA0inB + np.matmul(matrixFromAtoB, A0toEinA)
 
     matrixfromBtoC = np.array([
-        [cos(lowerrot), 0, -sin(lowerrot)],
-        [0, 1, 0, ],
-        [sin(lowerrot), 0, cos(lowerrot)],
+        [cos(lowerrot), 0., -sin(lowerrot)],
+        [0., 1., 0.],
+        [sin(lowerrot), 0., cos(lowerrot)],
     ])
 
-    C0toB0inC = np.array([0,-HIP_OFFSET,0])
+    C0toB0inC = np.array([0.,-HIP_OFFSET,0.])
 
     C0toEinC = C0toB0inC + np.matmul(matrixfromBtoC, B0toEinB)
 
     matrixfromCtoD = np.array([
-        [cos(baserot), -sin(baserot), 0],
-        [sin(baserot), cos(baserot), 0],
-        [0, 0, 1],
+        [cos(baserot), -sin(baserot), 0.],
+        [sin(baserot), cos(baserot), 0.],
+        [0., 0., 1.],
     ])
 
     C0toEinD = np.matmul(matrixfromCtoD, C0toEinC)
-    D0toC0inD = [0, 0, 0]
+    D0toC0inD = np.array([0., 0., 0.])
 
     D0toEinD = D0toC0inD + C0toEinD
 
@@ -70,7 +70,7 @@ def ik_cost(end_effector_pos: np.ndarray, guess: np.ndarray):
     """
     # TODO for students: Implement this function. ~1-5 lines of code.
     difference = end_effector_pos - calculate_forward_kinematics_robot(guess)
-    return sqrt(difference.dot(difference))
+    return sqrt(np.linalg.norm(difference))
 
 def calculate_jacobian(joint_angles):
     """Calculate the jacobian of the end-effector position wrt joint angles.
@@ -91,10 +91,11 @@ def calculate_jacobian(joint_angles):
     """
 
     def fdm(angles, angleindex, cartindex):
-        delta = np.array(0,0,0)
-        delta[angleindex] = .0001
+        deltascalar = .0001
+        delta = np.array([0.,0.,0.])
+        delta[angleindex] = deltascalar
         difference = calculate_forward_kinematics_robot(angles + delta) - calculate_forward_kinematics_robot(angles)
-        return (difference/delta)[cartindex]
+        return (difference/deltascalar)[cartindex]
 
 
     jacobian = np.array([
@@ -118,11 +119,9 @@ def calculate_inverse_kinematics(end_effector_pos, guess):
     Returns:
       Joint angles that correspond to given desired end-effector position. Numpy array with 3 elements.
     """
-    # TODO for students: Implement this function. ~10-20 lines of code.
-
-    cost = 10000000.0
-    epsilon = .04
-    learning_rate = .0001
+    cost = ik_cost(end_effector_pos, guess)
+    epsilon = .01
+    learning_rate = 10.
     while (cost > epsilon):
         jacobian = calculate_jacobian(guess)
         difference = calculate_forward_kinematics_robot(guess) - end_effector_pos
@@ -130,5 +129,4 @@ def calculate_inverse_kinematics(end_effector_pos, guess):
         guess = guess - learning_rate*gradient
         cost = ik_cost(end_effector_pos, guess)
         print(f"cost: {cost}")
-
     return guess
