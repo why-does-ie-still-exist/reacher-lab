@@ -48,6 +48,7 @@ def main(argv):
   p.setRealTimeSimulation(1)
   counter = 0
   last_command = time.time()
+  last_pos = np.tile(.05, 3)
 
   # Use this function to disable/enable certain motors. The first six elements
   # determine activation of the motors attached to the front of the PCB, which
@@ -70,7 +71,7 @@ def main(argv):
                                         posObj=desired_end_effector_pos,
                                         ornObj=[0, 0, 0, 1])
       # calculate inverse kinematics and write out joint angles
-      arm_pos = reacher_kinematics.calculate_inverse_kinematics(np.array(desired_end_effector_pos), np.zeros(3))
+      arm_pos = reacher_kinematics.calculate_inverse_kinematics(np.array(desired_end_effector_pos), last_pos)
       # joint_angles = np.pad(arm_pos, (0,3), 'constant')
       joint_angles = np.tile(arm_pos, 2)
       for i in range(6):
@@ -84,6 +85,7 @@ def main(argv):
       p.resetBasePositionAndOrientation(red_sphere_id,
                                         posObj=forward_kinematics,
                                         ornObj=[0, 0, 0, 1])
+      last_pos = arm_pos
 
       if run_on_robot:
         full_actions = np.zeros([3, 4])
