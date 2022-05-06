@@ -10,6 +10,11 @@ def create_debug_sphere():
                                 basePosition=np.array([0, 0, 0]))
   return sphere_id
 
+def create_red_sphere():
+  target_visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=0.015, rgbaColor=np.array([1.,0.,0.,0.]))
+  sphere_id = p.createMultiBody(baseVisualShapeIndex=target_visual_shape,
+                                basePosition=np.array([0, 0, 0]))
+  return sphere_id
 
 def load_reacher():
   p.connect(p.GUI)
@@ -49,6 +54,11 @@ def get_param_ids(reacher_id):
                                   0))
   return param_ids
 
+def get_xyz_ids():
+  xyz_ids = []
+  for name in ('x','y','x'):
+    xyz_ids.append(p.addUserDebugParameter(name, -.3, .3, 0))
+  return xyz_ids
 
 def zero_damping(reacher_id):
   p.changeDynamics(reacher_id, -1, linearDamping=0, angularDamping=0)
