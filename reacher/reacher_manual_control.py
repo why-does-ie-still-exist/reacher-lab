@@ -7,7 +7,6 @@ import numpy as np
 from absl import app
 from absl import flags
 from pupper_hardware_interface import interface
-from sys import platform
 
 flags.DEFINE_bool("run_on_robot", False,
                   "Whether to run on robot or in simulation.")
@@ -89,8 +88,8 @@ def main(argv):
 
       if run_on_robot:
         full_actions = np.zeros([3, 4])
-        full_actions[:, 3] = np.reshape(-joint_angles, -1)[:3]
-        full_actions[:, 2] = np.reshape(-joint_angles, -1)[3:]
+        np.transpose(full_actions)[3][:3] = np.reshape(joint_angles, -1)[:3]
+        np.transpose(full_actions)[2][:3] = np.reshape(joint_angles, -1)[3:]
 
         hardware_interface.set_actuator_postions(np.array(full_actions))
         # Actuator positions are stored in array: hardware_interface.robot_state.position,
