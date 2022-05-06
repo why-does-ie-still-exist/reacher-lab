@@ -89,9 +89,14 @@ def main(argv):
 
     if run_on_robot:
       full_actions = np.zeros([3, 4])
-      np.transpose(full_actions)[3][0] = np.reshape(joint_angles, -1)[0]
+      np.transpose(full_actions)[3][2] = joint_angles[2]
+      np.transpose(full_actions)[2][2] = joint_angles[5]
+      np.transpose(full_actions)[3][1] = joint_angles[1]
+      np.transpose(full_actions)[2][1] = joint_angles[4]
+      np.transpose(full_actions)[3][0] = joint_angles[0]
+      np.transpose(full_actions)[2][0] = joint_angles[3]
       # np.transpose(full_actions)[2][:3] = np.reshape(joint_angles, -1)[3:]
-
+      
       hardware_interface.set_actuator_postions(np.array(full_actions))
       # Actuator positions are stored in array: hardware_interface.robot_state.position,
       # Actuator velocities are stored in array: hardware_interface.robot_state.velocity
