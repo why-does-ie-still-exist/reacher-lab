@@ -78,7 +78,7 @@ def main(argv):
         p.setJointMotorControl2(reacher,
                                 joint_ids[i],
                                 p.POSITION_CONTROL,
-                                -joint_angles[i],
+                                joint_angles[i],
                                 force=2.)
       # calculates forward kinematics and moves red sphere accordingly
       forward_kinematics = reacher_kinematics.calculate_forward_kinematics_robot(joint_angles[:3])
@@ -89,8 +89,8 @@ def main(argv):
 
       if run_on_robot:
         full_actions = np.zeros([3, 4])
-        full_actions[:, 3] = np.reshape(joint_angles, -1)[:3]
-        full_actions[:, 2] = np.reshape(joint_angles, -1)[3:]
+        full_actions[:, 3] = np.reshape(-joint_angles, -1)[:3]
+        full_actions[:, 2] = np.reshape(-joint_angles, -1)[3:]
 
         hardware_interface.set_actuator_postions(np.array(full_actions))
         # Actuator positions are stored in array: hardware_interface.robot_state.position,
