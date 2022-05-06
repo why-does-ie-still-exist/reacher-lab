@@ -48,6 +48,7 @@ def main(argv):
   counter = 0
   last_command = time.time()
   last_pos = np.tile(.05, 3)
+  joint_angles = np.zeros(6)
 
   # Use this function to disable/enable certain motors. The first six elements
   # determine activation of the motors attached to the front of the PCB, which
@@ -86,14 +87,14 @@ def main(argv):
                                         ornObj=[0, 0, 0, 1])
       last_pos = arm_pos
 
-      if run_on_robot:
-        full_actions = np.zeros([3, 4])
-        np.transpose(full_actions)[3][:3] = np.reshape(joint_angles, -1)[:3]
-        np.transpose(full_actions)[2][:3] = np.reshape(joint_angles, -1)[3:]
+    if run_on_robot:
+      full_actions = np.zeros([3, 4])
+      np.transpose(full_actions)[3][0] = np.reshape(joint_angles, -1)[0]
+      # np.transpose(full_actions)[2][:3] = np.reshape(joint_angles, -1)[3:]
 
-        hardware_interface.set_actuator_postions(np.array(full_actions))
-        # Actuator positions are stored in array: hardware_interface.robot_state.position,
-        # Actuator velocities are stored in array: hardware_interface.robot_state.velocity
+      hardware_interface.set_actuator_postions(np.array(full_actions))
+      # Actuator positions are stored in array: hardware_interface.robot_state.position,
+      # Actuator velocities are stored in array: hardware_interface.robot_state.velocity
 
 
 app.run(main)
