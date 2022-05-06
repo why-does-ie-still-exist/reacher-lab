@@ -78,7 +78,7 @@ def main(argv):
         p.setJointMotorControl2(reacher,
                                 joint_ids[i],
                                 p.POSITION_CONTROL,
-                                joint_angles[i],
+                                -joint_angles[i],
                                 force=2.)
       # calculates forward kinematics and moves red sphere accordingly
       forward_kinematics = reacher_kinematics.calculate_forward_kinematics_robot(joint_angles[:3])
