@@ -1,8 +1,11 @@
+import math
+
+import numpy as np
 import pybullet as p
 import pybullet_data
+
 import reacher.data as pd
-import numpy as np
-import math
+
 
 def create_debug_sphere():
   target_visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=0.015)
@@ -10,11 +13,13 @@ def create_debug_sphere():
                                 basePosition=np.array([0, 0, 0]))
   return sphere_id
 
+
 def create_red_sphere():
-  target_visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=0.015, rgbaColor=np.array([1.,0.,0.,0.]))
+  target_visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=0.015, rgbaColor=np.array([1., 0., 0., 0.]))
   sphere_id = p.createMultiBody(baseVisualShapeIndex=target_visual_shape,
                                 basePosition=np.array([0, 0, 0]))
   return sphere_id
+
 
 def load_reacher():
   p.connect(p.GUI)
@@ -50,15 +55,17 @@ def get_param_ids(reacher_id):
     joint_type = info[2]
     if (joint_type == p.JOINT_PRISMATIC or joint_type == p.JOINT_REVOLUTE):
       param_ids.append(
-          p.addUserDebugParameter(joint_name.decode("utf-8"), -math.pi, math.pi,
-                                  0))
+        p.addUserDebugParameter(joint_name.decode("utf-8"), -math.pi, math.pi,
+                                0))
   return param_ids
+
 
 def get_xyz_ids():
   xyz_ids = []
-  for name in ('x','y','x'):
+  for name in ('x', 'y', 'x'):
     xyz_ids.append(p.addUserDebugParameter(name, -.3, .3, 0.05))
   return xyz_ids
+
 
 def zero_damping(reacher_id):
   p.changeDynamics(reacher_id, -1, linearDamping=0, angularDamping=0)

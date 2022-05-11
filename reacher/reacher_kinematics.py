@@ -1,6 +1,6 @@
-import numpy as np
-import copy
 from math import *
+
+import numpy as np
 
 HIP_OFFSET = 0.0335
 L1 = 0.08  # length of link 1
@@ -106,7 +106,7 @@ def calculate_jacobian(joint_angles):
   return jacobian
 
 
-def calculate_inverse_kinematics(end_effector_pos, guess, max_epochs=1000):
+def calculate_inverse_kinematics(end_effector_pos, guess, max_epochs=100):
   """Calculates joint angles given desired xyz coordinates.
 
   Use gradient descent to minimize the inverse kinematics loss function. The
@@ -121,22 +121,26 @@ def calculate_inverse_kinematics(end_effector_pos, guess, max_epochs=1000):
   Returns:
     Joint angles that correspond to given desired end-effector position. Numpy array with 3 elements.
   """
-  #if our point is too far away, we can project it onto a sphere that will make it easier to reach
-  if(np.linalg.norm(end_effector_pos) > .21):
+  # if our point is too far away, we can project it onto a sphere that will make it easier to reach
+  if (np.linalg.norm(end_effector_pos) > .21):
     end_effector_pos /= np.linalg.norm(end_effector_pos)
     end_effector_pos *= .50
 
   cost = ik_cost(end_effector_pos, guess)
   epsilon = .01
-  learning_rate = 10.
+  step_size = 10.
   epoch = 1
-  while (cost > epsilon):
-    if (epoch > max_epochs):
-      return guess
+  # we can terminate the algorithm when our guess and our desired position are close enough, or if it takes too long to converge
+  while (cost > epsilon and epoch <= max_epochs):
     jacobian = calculate_jacobian(guess)
     difference = calculate_forward_kinematics_robot(guess) - end_effector_pos
+    #get the gradient
     gradient = np.matmul(np.transpose(jacobian), difference)
-    guess = guess - learning_rate * gradient
+    # the gradient points towrds the greatest increase at any point. Since we have the gradient of the cost(euclidean distance),
+    # we want to go where the least increase at a given point is. So, we take the opposite of the gradient (-1 * gradient)
+    # however, we want to control how fast it converges, because if the gradient is too big it may overshoot, or if it's too small it may take
+    # a long time. This is why we have a step size, or more commonly called the learning rate in machine learning.
+    guess = guess - step_size * gradient
     cost = ik_cost(end_effector_pos, guess)
     epoch += 1
   return guess

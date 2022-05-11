@@ -1,6 +1,7 @@
-from serial.tools import list_ports
 import time
+
 import numpy as np
+from serial.tools import list_ports
 
 
 def get_serial_port():

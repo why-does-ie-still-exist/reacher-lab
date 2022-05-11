@@ -1,12 +1,14 @@
-from reacher import reacher_kinematics
-from reacher import reacher_robot_utils
-from reacher import reacher_sim_utils
-import pybullet as p
 import time
+
 import numpy as np
+import pybullet as p
 from absl import app
 from absl import flags
 from pupper_hardware_interface import interface
+
+from reacher import reacher_kinematics
+from reacher import reacher_robot_utils
+from reacher import reacher_sim_utils
 
 flags.DEFINE_bool("run_on_robot", False,
                   "Whether to run on robot or in simulation.")
@@ -30,6 +32,7 @@ def main(argv):
   red_sphere_id = reacher_sim_utils.create_red_sphere()
 
   joint_ids = reacher_sim_utils.get_joint_ids(reacher)
+  # this was used for manually controlling the joint angles, doesn't make much sense for IK code
   # param_ids = reacher_sim_utils.get_param_ids(reacher)
   xyz_ids = reacher_sim_utils.get_xyz_ids()
   reacher_sim_utils.zero_damping(reacher)
@@ -70,8 +73,10 @@ def main(argv):
       p.resetBasePositionAndOrientation(white_sphere_id,
                                         posObj=desired_end_effector_pos,
                                         ornObj=[0, 0, 0, 1])
-      # calculate inverse kinematics and write out joint angles
-      arm_pos = reacher_kinematics.calculate_inverse_kinematics(np.array(desired_end_effector_pos), last_pos)
+      # calculate inverse kinematics and write out joint angles. I've set max_epochs(number of gradient descent steps) to be one,
+      # so we can see it converging in real time
+      arm_pos = reacher_kinematics.calculate_inverse_kinematics(np.array(desired_end_effector_pos), last_pos,
+                                                                max_epochs=1)
       # joint_angles = np.pad(arm_pos, (0,3), 'constant')
       joint_angles = np.tile(arm_pos, 2)
       for i in range(6):
@@ -88,15 +93,18 @@ def main(argv):
       last_pos = arm_pos
 
     if run_on_robot:
+      # here we're just manipulating the joint positions into the special array shape the controller wants
       full_actions = np.zeros([3, 4])
-      np.transpose(full_actions)[3][2] = joint_angles[2]
-      np.transpose(full_actions)[2][2] = joint_angles[5]
-      np.transpose(full_actions)[3][1] = joint_angles[1]
-      np.transpose(full_actions)[2][1] = joint_angles[4]
-      np.transpose(full_actions)[3][0] = joint_angles[0]
-      np.transpose(full_actions)[2][0] = joint_angles[3]
-      # np.transpose(full_actions)[2][:3] = np.reshape(joint_angles, -1)[3:]
-      
+      np.transpose(full_actions)[2] = joint_angles[3:6]
+      np.transpose(full_actions)[3] = joint_angles[0:3]
+      # this bottom part was from testing, it definitely works, the top part idk
+      # np.transpose(full_actions)[3][2] = joint_angles[2]
+      # np.transpose(full_actions)[2][2] = joint_angles[5]
+      # np.transpose(full_actions)[3][1] = joint_angles[1]
+      # np.transpose(full_actions)[2][1] = joint_angles[4]
+      # np.transpose(full_actions)[3][0] = joint_angles[0]
+      # np.transpose(full_actions)[2][0] = joint_angles[3]
+
       hardware_interface.set_actuator_postions(np.array(full_actions))
       # Actuator positions are stored in array: hardware_interface.robot_state.position,
       # Actuator velocities are stored in array: hardware_interface.robot_state.velocity
