@@ -62,7 +62,7 @@ def get_param_ids(reacher_id):
 
 def get_xyz_ids():
   xyz_ids = []
-  for name in ('x', 'y', 'x'):
+  for name in ('x', 'y', 'z'):
     xyz_ids.append(p.addUserDebugParameter(name, -.3, .3, 0.05))
   return xyz_ids
 
